@@ -1,6 +1,6 @@
 {
   "name": "getsnap-mcp",
-  "version": "1.14.4",
+  "version": "1.14.5",
   "mcpName": "dev.getsnap/getsnap",
   "description": "Official MCP server for getSnap.dev — let Claude and other agents capture screenshots, PDFs, visual diffs and accessibility audits",
   "type": "module",
