@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Typecheck and build
+        run: npm run build
+
+      - name: Server speaks MCP
+        # tsc proves it compiles. This proves a real client can connect
+        # and see the tools, which is the thing that actually breaks.
+        run: node test/smoke.mjs
+
+      - name: server.json agrees with package.json
+        # The registry rejects a publish where mcpName and the server
+        # name differ, and refuses to replace a published version - so
+        # catching a mismatch here costs a re-run rather than a wasted
+        # version number.
+        run: |
+          set -euo pipefail
+          PKG_V=$(node -p "require('./package.json').version")
+          PKG_N=$(node -p "require('./package.json').mcpName")
+          SRV_V=$(node -p "require('./server.json').version")
+          SRV_N=$(node -p "require('./server.json').name")
+          SRV_P=$(node -p "require('./server.json').packages[0].version")
+          SRC_V=$(grep -oE 'const VERSION = "[^"]+"' src/index.ts | cut -d'"' -f2)
+          echo "package=$PKG_V server=$SRV_V pkgEntry=$SRV_P src=$SRC_V"
+          echo "mcpName=$PKG_N serverName=$SRV_N"
+          [ "$PKG_N" = "$SRV_N" ] || { echo "!! mcpName != server.json name"; exit 1; }
+          [ "$PKG_V" = "$SRV_V" ] && [ "$SRV_V" = "$SRV_P" ] && [ "$SRV_P" = "$SRC_V" ] \
+            || { echo "!! version drift across package.json, server.json and src"; exit 1; }

@@ -91,4 +91,11 @@ Once connected, ask your agent in plain language:
 - [Pricing](https://getsnap.dev/screenshot-api-pricing.html)
 - [Node SDK](https://www.npmjs.com/package/getsnap) · [Python SDK](https://pypi.org/project/getsnap/)
 
+## Versioning
+
+This package versions independently of the getSnap REST API and the
+Node and Python SDKs. It shared their number until 1.14.3, when it
+moved out of the API monorepo into this repository; from here it moves
+on its own schedule.
+
 MIT licensed. Issues to support@getsnap.dev.

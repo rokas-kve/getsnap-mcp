@@ -1,0 +1,77 @@
+name: Publish
+
+# Manual only. npm refuses to replace a published version and the MCP
+# Registry refuses to replace a published name+version, so a mistake
+# here costs a version number rather than a revert.
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: Also publish metadata to the MCP Registry
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for npm provenance. This is the whole reason the
+      # package moved out of the private monorepo: npm verifies a
+      # provenance attestation against the source repo, which it
+      # cannot do when that repo is private - it fails with E422
+      # "Unsupported GitHub Actions source repository visibility".
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+      - run: npm run build
+      - name: Server speaks MCP
+        run: node test/smoke.mjs
+
+      - name: Not already published
+        run: |
+          set -euo pipefail
+          V=$(node -p "require('./package.json').version")
+          if curl -sf "https://registry.npmjs.org/getsnap-mcp/$V" >/dev/null 2>&1; then
+            echo "!! npm already has getsnap-mcp@$V. Bump; a published version cannot be replaced."
+            exit 1
+          fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish metadata to the MCP Registry
+        if: inputs.registry
+        env:
+          MCP_REGISTRY_KEY: ${{ secrets.MCP_REGISTRY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MCP_REGISTRY_KEY:-}" ]; then
+            echo "MCP_REGISTRY_KEY is not set - skipping the registry."
+            echo "npm is published; add the secret and re-run with registry=true to finish."
+            exit 0
+          fi
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          chmod +x mcp-publisher
+          # Domain-based auth: the proof is a file served at
+          # https://getsnap.dev/.well-known/mcp-registry-auth, deployed
+          # from the getsnap-api repo. This key signs against it.
+          ./mcp-publisher login http --domain getsnap.dev --private-key "$MCP_REGISTRY_KEY"
+          ./mcp-publisher validate
+          ./mcp-publisher publish
+
+      - name: What is now live
+        if: always()
+        run: |
+          echo "npm:      https://www.npmjs.com/package/getsnap-mcp/v/${VERSION:-?}"
+          echo "registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=dev.getsnap"
