@@ -3,15 +3,15 @@
   "name": "dev.getsnap/getsnap",
   "description": "Screenshots, PDFs, visual diffs and accessibility audits, returned inline so a model can see them",
   "repository": {
-    "url": "https://github.com/rokas-kve/getsnap-api",
+    "url": "https://github.com/rokas-kve/getsnap-mcp",
     "source": "github"
   },
-  "version": "1.14.2",
+  "version": "1.14.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "getsnap-mcp",
-      "version": "1.14.2",
+      "version": "1.14.3",
       "transport": {
         "type": "stdio"
       },
