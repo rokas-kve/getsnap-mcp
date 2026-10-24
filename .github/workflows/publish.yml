@@ -34,20 +34,49 @@ jobs:
       - name: Server speaks MCP
         run: node test/smoke.mjs
 
-      - name: Not already published
+      # Decides what still needs doing rather than failing outright.
+      # This job publishes to two places and the second can fail on its
+      # own - as it did on 1.14.5, where npm succeeded and the registry
+      # rejected the version because npm had not propagated yet. If the
+      # guard aborts on "npm already has this", re-running to finish the
+      # registry half is impossible and the only way forward is burning
+      # another version number.
+      - name: What still needs publishing
+        id: todo
         run: |
           set -euo pipefail
           V=$(node -p "require('./package.json').version")
-          if curl -sf "https://registry.npmjs.org/getsnap-mcp/$V" >/dev/null 2>&1; then
-            echo "!! npm already has getsnap-mcp@$V. Bump; a published version cannot be replaced."
-            exit 1
-          fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
+          if curl -sf "https://registry.npmjs.org/getsnap-mcp/$V" >/dev/null 2>&1; then
+            echo "npm already has $V - skipping npm, will still try the registry"
+            echo "npm=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "npm=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Publish to npm with provenance
+        if: steps.todo.outputs.npm == 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # The registry refuses a version it cannot see on npm, and npm
+      # takes 30-60s to expose a freshly published one. Without this the
+      # registry step loses a race it did not know it was in.
+      - name: Wait for npm to expose the version
+        if: inputs.registry
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 20); do
+            if curl -sf "https://registry.npmjs.org/getsnap-mcp/${VERSION}" >/dev/null 2>&1; then
+              echo "npm has ${VERSION} (after ${i} checks)"
+              exit 0
+            fi
+            echo "  not visible yet (${i}/20)"
+            sleep 15
+          done
+          echo "!! npm did not expose ${VERSION} within 5 minutes"
+          exit 1
 
       - name: Publish metadata to the MCP Registry
         if: inputs.registry
@@ -68,6 +97,14 @@ jobs:
           # from the getsnap-api repo. This key signs against it.
           ./mcp-publisher login http --domain getsnap.dev --private-key "$MCP_REGISTRY_KEY"
           ./mcp-publisher validate
+          # The registry will not replace a published name+version, so
+          # re-running after a partial failure should be a no-op rather
+          # than an error.
+          if curl -s "https://registry.modelcontextprotocol.io/v0.1/servers?search=dev.getsnap" \
+               | grep -q "\"version\":\"${VERSION}\""; then
+            echo "registry already has ${VERSION} - nothing to do"
+            exit 0
+          fi
           ./mcp-publisher publish
 
       - name: What is now live
