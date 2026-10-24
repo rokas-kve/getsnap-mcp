@@ -1,0 +1,29 @@
+{
+  "name": "getsnap-mcp",
+  "version": "1.14.2",
+  "mcpName": "dev.getsnap/getsnap",
+  "description": "Official MCP server for getSnap.dev — let Claude and other agents capture screenshots, PDFs, visual diffs and accessibility audits",
+  "type": "module",
+  "bin": {
+    "getsnap-mcp": "dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["mcp", "model-context-protocol", "claude", "screenshot", "pdf", "api", "getsnap", "ai-agent"],
+  "author": "getSnap.dev",
+  "license": "MIT",
+  "homepage": "https://getsnap.dev/mcp.html",
+  "repository": { "type": "git", "url": "https://github.com/rokas-kve/getsnap-api" },
+  "bugs": { "email": "support@getsnap.dev" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
