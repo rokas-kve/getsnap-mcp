@@ -15,7 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const VERSION = "1.14.3";
+const VERSION = "1.14.4";
 const API_KEY = process.env.GETSNAP_API_KEY;
 const BASE_URL = process.env.GETSNAP_BASE_URL ?? "https://api.getsnap.dev";
 
