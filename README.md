@@ -9,6 +9,21 @@ The capture tools return **the image itself**, not a link to it. A model
 can look at the page it just asked for, so "screenshot this and tell me
 what's broken" works in a single turn.
 
+## Features
+
+- **`capture_screenshot`** — any URL to PNG, JPEG or WebP, full page or
+  viewport, with mobile and tablet emulation, returned **inline** so the
+  model can look at it
+- **`capture_pdf`** — any URL to a PDF, returned as a link, since a PDF
+  cannot be shown to a model inline
+- **`compare_pages`** — visual diff of two URLs: similarity score plus the
+  overlay, inline
+- **`audit_accessibility`** — axe-core in a real browser: WCAG 2.0/2.1/2.2
+  violations by severity
+- **`check_usage`** — credits used and remaining, costs nothing
+- Cookie banner removal and ad blocking are on for every capture
+- Free tier: 100 captures a month, no card
+
 ## Install
 
 No install step. Your client runs it with `npx`.
@@ -84,6 +99,17 @@ Once connected, ask your agent in plain language:
 - *"Compare our staging site against production and show me what moved."*
 - *"Audit example.com for accessibility and list the critical failures."*
 - *"How many getSnap credits do I have left?"*
+
+## Use cases
+
+- **Catch layout breakage** — screenshot a page at mobile width and have the
+  model describe what overlaps or clips
+- **Review a deploy** — diff staging against production and see what moved
+  before anyone else does
+- **Accessibility triage** — list WCAG failures by severity ahead of a release
+- **Generate documents** — turn an invoice, report or receipt URL into a PDF
+- **Watch a competitor** — capture a pricing page on a schedule and compare it
+  with last week's
 
 ## Links
 
