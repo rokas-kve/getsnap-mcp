@@ -1,5 +1,7 @@
 # getsnap-mcp
 
+[![Getsnap MCP server](https://mcprush.com/badge/getsnap-mcp/compact.svg)](https://mcprush.com/to/getsnap-mcp?ref=badge)
+
 Official [MCP](https://modelcontextprotocol.io) server for
 [getSnap.dev](https://getsnap.dev). Gives Claude and other agents the
 ability to capture a web page, compare two pages and audit one for
